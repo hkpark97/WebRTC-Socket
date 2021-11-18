@@ -23,13 +23,21 @@ const sockets = [];
 wss.on("connection", (socket) => {
   // put dummy DB into socket
   sockets.push(socket);
+  socket["nickname"] = "Anon";
   console.log("Connected to Browser ✅");
-  socket.on("message", (message) => {
-    console.log(message.toString("utf-8"));
-    // mark each browser as aSocket then, send message
-    sockets.forEach(aSocket => aSocket.send(message.toString()));
-  });
   socket.on("close", () => console.log("Disconnected from the Browser ❌"));
+  socket.on("message", (msg) => {
+    const message = JSON.parse(msg);
+
+    // instead of using if else condition, can use switch
+    switch (message.type) {
+      case "new_message":
+        sockets.forEach((aSocket) => aSocket.send(`${socket.nickname}: ${message.payload}`));
+
+      case "nickname":
+        socket["nickname"] = message.payload;
+    }
+  });
 });
 
 server.listen(3000, handleListen);
@@ -39,3 +47,20 @@ server.listen(3000, handleListen);
 // want views, static files, home, redirection`
 
 // socket is a connection between me and browser
+
+// Send JSON
+{
+  type: "message";
+  payload: "Hello";
+}
+
+{
+  type: "nickname";
+  payload: "Kate Park";
+}
+
+// The JSON.stringify() method converts a JavaScript object or value to a JSON string
+// => Convert object to string
+
+// The JSON.parse() method parses a JSON string, constructing the JavaScript value or object described by the string. An optional reviver function can be provided to perform a transformation on the resulting object before it is returned.
+// => Convert string to JS object
