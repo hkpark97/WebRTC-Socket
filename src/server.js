@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 const app = express();
@@ -13,42 +13,37 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on http://locahost:3000`);
 // app.listen(3000, handleListen);
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const httpServer = http.createServer(app);
+const wsServer = SocketIO(httpServer);
 
-// dummy DB
-const sockets = [];
-
-// This wil be displayed in the terminal
-wss.on("connection", (socket) => {
-  // put dummy DB into socket
-  sockets.push(socket);
-  socket["nickname"] = "Anon";
-  console.log("Connected to Browser ✅");
-  socket.on("close", () => console.log("Disconnected from the Browser ❌"));
-  socket.on("message", (msg) => {
-    const message = JSON.parse(msg);
-
-    // instead of using if else condition, can use switch
-    switch (message.type) {
-      case "new_message":
-        sockets.forEach((aSocket) => aSocket.send(`${socket.nickname}: ${message.payload}`));
-
-      case "nickname":
-        socket["nickname"] = message.payload;
-    }
+wsServer.on("connection", (socket) => {
+  socket.onAny((event) => {
+    console.log(`Socket Event: ${event}`);
+  });
+  socket.on("enter_room", (roomName, done) => {
+    // make chat room
+    socket.join(roomName);
+    // execute function showRoom
+    done();
+    // send a message to one room
+    socket.to(roomName).emit("Welcome");
+  });
+  // send a message when someone is leaving
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach(room => socket.to(room).emit("Bye"));
+  });
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", msg);
+  // this will be executed on the front-end side
+    done();
   });
 });
 
-server.listen(3000, handleListen);
+// disconnect: firing when the connection is completely lost (room info is empty)
+// disconnecting: browser is closed but the server is still connecting. (room info is valid)
 
-// server can handle ws, https by implementing WebSockets
-// Reasons to be needed http server:
-// want views, static files, home, redirection`
+httpServer.listen(3000, handleListen);
 
-// socket is a connection between me and browser
-
-// Send JSON
 {
   type: "message";
   payload: "Hello";
@@ -64,3 +59,4 @@ server.listen(3000, handleListen);
 
 // The JSON.parse() method parses a JSON string, constructing the JavaScript value or object described by the string. An optional reviver function can be provided to perform a transformation on the resulting object before it is returned.
 // => Convert string to JS object
+

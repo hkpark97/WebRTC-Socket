@@ -2,19 +2,23 @@ doctype html
 html(lang="en")
     head
         meta(charset="UTF-8")
-        meta(http-equiv="X-UA-Compatible", content="IE=edge")
-        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(http-equiv="X-UA-Compatible" content="IE=edge")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
         title Web RTC
-        link(rel="stylesheet", href="https://unpkg.com/mvp.css")
+        link(rel="stylesheet" href="https://unpkg.com/mvp.css")
     body 
         header 
             h1 Web RTC
         main 
-            form#nick
-                input(type="text", placeholder="Select a Nickname", required) 
-                button Select 
-            ul
-            form#message
-                input(type="text", placeholder="Write a Message", required) 
-                button Send
+            div#welcome
+                form 
+                    input(placeholder="Room Name", required, type="text")
+                    button ENTER ROOM 
+            div#room
+                h3
+                ul 
+                form
+                    input(placeholder="message", required, type="text")
+                    button SEND          
+        script(src="socket.io/socket.io.js")   
         script(src="/public/js/app.js")
