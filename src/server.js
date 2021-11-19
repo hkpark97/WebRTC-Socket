@@ -16,6 +16,23 @@ const handleListen = () => console.log(`Listening on http://locahost:3000`);
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
+// getting sids and rooms inside of wsServer
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: {sids, rooms},
+    },
+  } = wsServer;
+  // finding public rooms
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if(sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "Anon";
   socket.onAny((event) => {
@@ -28,11 +45,16 @@ wsServer.on("connection", (socket) => {
     done();
     // send a message to one room
     socket.to(roomName).emit("Welcome", socket.nickname);
+    // notify everyone in the room
+    wsServer.sockets.emit("room_change", publicRooms());
   });
   // send a message when someone is leaving
   socket.on("disconnecting", () => {
     socket.rooms.forEach(room => socket.to(room).emit("Bye", socket.nickname));
   });
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
+  }); 
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
   // this will be executed on the front-end side

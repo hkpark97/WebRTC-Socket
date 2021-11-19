@@ -37,7 +37,7 @@ function showRoom() {
   room.hidden = false;
   const h3 = room.querySelector("h3");
   h3.innerText = `Room ${roomName}`;
-  const msgForm = room.querySelector("#msg");
+  const msgForm  = room.querySelector("#msg");
   const nameForm = room.querySelector("#name");
   // send function to the back-end
   msgForm.addEventListener("submit", handleMessageSubmit);
@@ -65,6 +65,21 @@ socket.on("Bye", (left) => {
 
 // receiving message
 socket.on("new_message", addMessage);
+
+// notify everyone in the room
+socket.on("room_change", (rooms) => {
+  const roomList = welcome.querySelector("ul");
+  // if there's a empty room clear the status
+  roomList.innerHTML = ""; 
+  if(rooms.length === 0 ) {
+    return;
+  }
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerText = room;
+    roomList.appendChild(li);
+  })
+});
 
 
 // The appendChild() method of the Node interface adds a node to the end of 
