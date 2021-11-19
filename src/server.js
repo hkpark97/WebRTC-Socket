@@ -1,5 +1,6 @@
 import http from "http";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
 const app = express();
@@ -14,19 +15,30 @@ const handleListen = () => console.log(`Listening on http://locahost:3000`);
 // app.listen(3000, handleListen);
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer);
+
+// Socket admin panel
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(wsServer, {
+  auth: false,
+});
 
 // getting sids and rooms inside of wsServer
 function publicRooms() {
   const {
     sockets: {
-      adapter: {sids, rooms},
+      adapter: { sids, rooms },
     },
   } = wsServer;
   // finding public rooms
   const publicRooms = [];
   rooms.forEach((_, key) => {
-    if(sids.get(key) === undefined) {
+    if (sids.get(key) === undefined) {
       publicRooms.push(key);
     }
   });
@@ -35,8 +47,8 @@ function publicRooms() {
 
 function countRoom(roomName) {
   // if precondition is true return .size else return undefined
-  return wsServer.sockets.adapter.rooms.get(roomName)?.size; 
-} 
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
 
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "Anon";
@@ -55,15 +67,17 @@ wsServer.on("connection", (socket) => {
   });
   // send a message when someone is leaving
   socket.on("disconnecting", () => {
-    // countRoom(room) -1 => we haven't left the room so they will count include you, so we instead do -1 
-    socket.rooms.forEach(room => socket.to(room).emit("Bye", socket.nickname, countRoom(room) - 1));
+    // countRoom(room) -1 => we haven't left the room so they will count include you, so we instead do -1
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("Bye", socket.nickname, countRoom(room) - 1)
+    );
   });
   socket.on("disconnect", () => {
     wsServer.sockets.emit("room_change", publicRooms());
-  }); 
+  });
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
-  // this will be executed on the front-end side
+    // this will be executed on the front-end side
     done();
   });
   // getting nick name
@@ -90,4 +104,3 @@ httpServer.listen(3000, handleListen);
 
 // The JSON.parse() method parses a JSON string, constructing the JavaScript value or object described by the string. An optional reviver function can be provided to perform a transformation on the resulting object before it is returned.
 // => Convert string to JS object
-
