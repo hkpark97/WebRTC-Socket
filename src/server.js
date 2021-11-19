@@ -17,6 +17,7 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+  socket["nickname"] = "Anon";
   socket.onAny((event) => {
     console.log(`Socket Event: ${event}`);
   });
@@ -26,17 +27,19 @@ wsServer.on("connection", (socket) => {
     // execute function showRoom
     done();
     // send a message to one room
-    socket.to(roomName).emit("Welcome");
+    socket.to(roomName).emit("Welcome", socket.nickname);
   });
   // send a message when someone is leaving
   socket.on("disconnecting", () => {
-    socket.rooms.forEach(room => socket.to(room).emit("Bye"));
+    socket.rooms.forEach(room => socket.to(room).emit("Bye", socket.nickname));
   });
   socket.on("new_message", (msg, room, done) => {
-    socket.to(room).emit("new_message", msg);
+    socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
   // this will be executed on the front-end side
     done();
   });
+  // getting nick name
+  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
 });
 
 // disconnect: firing when the connection is completely lost (room info is empty)
