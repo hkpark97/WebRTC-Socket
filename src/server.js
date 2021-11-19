@@ -33,6 +33,11 @@ function publicRooms() {
   return publicRooms;
 }
 
+function countRoom(roomName) {
+  // if precondition is true return .size else return undefined
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size; 
+} 
+
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "Anon";
   socket.onAny((event) => {
@@ -44,13 +49,14 @@ wsServer.on("connection", (socket) => {
     // execute function showRoom
     done();
     // send a message to one room
-    socket.to(roomName).emit("Welcome", socket.nickname);
+    socket.to(roomName).emit("Welcome", socket.nickname, countRoom(roomName));
     // notify everyone in the room
     wsServer.sockets.emit("room_change", publicRooms());
   });
   // send a message when someone is leaving
   socket.on("disconnecting", () => {
-    socket.rooms.forEach(room => socket.to(room).emit("Bye", socket.nickname));
+    // countRoom(room) -1 => we haven't left the room so they will count include you, so we instead do -1 
+    socket.rooms.forEach(room => socket.to(room).emit("Bye", socket.nickname, countRoom(room) - 1));
   });
   socket.on("disconnect", () => {
     wsServer.sockets.emit("room_change", publicRooms());
