@@ -11,19 +11,17 @@ html(lang="en")
             h1 Web RTC / Socket.io
         main 
             div#welcome
-                form 
+                form
                     input(placeholder="Room Name", required, type="text")
-                    button ENTER ROOM
-                h4 Open Rooms:  
-                ul    
-            div#room
-                h3
-                ul 
-                form#name
-                    input(placeholder="Nick Name", required, type="text")
-                    button SAVE     
-                form#msg
-                    input(placeholder="message", required, type="text")
-                    button SEND          
+                    button Enter Room
+            div#call
+                div#myStream
+                    video#myFace(autoplay,playsinline, width="400", height="400")
+                    button#mute Mute    
+                    button#camera Turn camera off
+                    select#cameras
+                video#peerFace(autoplay,playsinline, width="400", height="400") 
         script(src="socket.io/socket.io.js")   
         script(src="/public/js/app.js")
+
+        //- playsinline - needed in mobile browser
