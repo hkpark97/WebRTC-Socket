@@ -90,9 +90,17 @@ function handleCameraClick() {
   }
 }
 
-function handleCameraChange() {
-  getMedia(camerasSelect.value);
+async function handleCameraChange() {
+  await getMedia(camerasSelect.value);
+  if(myPeerConnection) {
+    const videoTrack = myStream.getVideoTracks()[0];
+    const videoSender = myPeerConnection
+    .getSenders()
+    .find((sender) => sender.track.kind === "video");
+    videoSender.replaceTrack(videoTrack);
+  }
 }
+// sender => the way controlling the data of video and audio that sent to other browser
 
 muteBtn.addEventListener("click", handleMuteClick);
 cameraBtn.addEventListener("click", handleCameraClick);
@@ -167,6 +175,8 @@ function handleAddStream(data) {
   const peerFace = document.getElementById("peerFace");
   peerFace.srcObject = data.stream;
 }
+
+// localtunnel => it enables to connect to the servers with the globals
 
 // constraints: what we want to get
 
