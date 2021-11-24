@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon",
+    "build": "app.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
