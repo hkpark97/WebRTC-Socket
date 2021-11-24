@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon",
+    "start": "nodemon",
     "build": "app.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
@@ -24,5 +25,6 @@
     "pug": "^3.0.2",
     "react-scripts": "^4.0.3",
     "socket.io": "^4.4.0"
-  }
+  },
+  "homepage": "https://hkpark97.github.io/WebRTC-Socket/"
 }
